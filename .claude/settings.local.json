@@ -20,7 +20,8 @@
       "Bash(ruff check:*)",
       "Bash(pip show:*)",
       "Bash(pip list:*)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Bash(mkdir -p /home/user/memetalk/.claude/hooks)"
     ]
   }
 }
