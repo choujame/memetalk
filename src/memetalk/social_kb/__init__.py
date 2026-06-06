@@ -3,6 +3,7 @@ from memetalk.social_kb.extractor import ContentExtractor
 from memetalk.social_kb.generator import ArticleGenerator, GeneratedArticle
 from memetalk.social_kb.models import ALL_CATEGORIES, ContentAnalysis, ContentItem, MonetizationScore
 from memetalk.social_kb.repository import SocialContentRepository
+from memetalk.social_kb.track_analyzer import TrackAnalyzer, TrackInsight, TrackStats
 
 __all__ = [
     "ALL_CATEGORIES",
@@ -14,4 +15,7 @@ __all__ = [
     "SocialContentRepository",
     "ContentExtractor",
     "SocialContentAnalyzer",
+    "TrackAnalyzer",
+    "TrackInsight",
+    "TrackStats",
 ]

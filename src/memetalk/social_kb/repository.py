@@ -151,6 +151,51 @@ class SocialContentRepository:
             ).fetchall()
         return {row[0]: row[1] for row in rows}
 
+    def get_track_stats(self, min_high_score: float = 7.0) -> list:
+        """Return per-category aggregates sorted by high-score count desc."""
+        from memetalk.social_kb.track_analyzer import TrackStats
+        with self._connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT
+                    category,
+                    COUNT(*) AS total_count,
+                    SUM(CASE WHEN overall_score >= ? THEN 1 ELSE 0 END) AS high_score_count,
+                    AVG(overall_score)    AS avg_score,
+                    AVG(social_score)     AS avg_social,
+                    AVG(knowledge_score)  AS avg_knowledge,
+                    AVG(affiliate_score)  AS avg_affiliate,
+                    AVG(consulting_score) AS avg_consulting
+                FROM social_content
+                GROUP BY category
+                ORDER BY high_score_count DESC, avg_score DESC
+                """,
+                (min_high_score,),
+            ).fetchall()
+
+        result: list[TrackStats] = []
+        for row in rows:
+            top = self.list_items(
+                categories=[row["category"]],
+                min_score=0.0,
+                sort_by="score",
+                limit=10,
+            )
+            result.append(
+                TrackStats(
+                    category=row["category"],
+                    total_count=row["total_count"],
+                    high_score_count=row["high_score_count"] or 0,
+                    avg_score=round(row["avg_score"] or 0, 1),
+                    avg_social=round(row["avg_social"] or 0, 1),
+                    avg_knowledge=round(row["avg_knowledge"] or 0, 1),
+                    avg_affiliate=round(row["avg_affiliate"] or 0, 1),
+                    avg_consulting=round(row["avg_consulting"] or 0, 1),
+                    top_items=top,
+                )
+            )
+        return result
+
     def delete_item(self, item_id: str) -> None:
         with self._connect() as conn:
             conn.execute("DELETE FROM social_content WHERE item_id = ?", (item_id,))
