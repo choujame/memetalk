@@ -89,6 +89,16 @@ class TrackAnalyzer:
         self.settings = settings
 
     async def get_insight(self, stats: TrackStats) -> TrackInsight:
+        if self.settings.provider_backend == "mock":
+            return TrackInsight(
+                category=stats.category,
+                common_themes=["mock 主題 A", "mock 主題 B"],
+                market_opportunity="mock provider 不提供實際分析，請設定 AI Provider。",
+                recommended_products=[{"type": "mock", "title": "Mock 產品", "description": "mock 描述"}],
+                action_plan=[{"step": 1, "action": "設定 AI Provider", "timeline": "立即"}],
+                competitive_advantage="mock 模式，無實際評估",
+            )
+
         if not stats.top_items:
             return TrackInsight(category=stats.category)
 

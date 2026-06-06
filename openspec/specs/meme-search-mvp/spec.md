@@ -175,6 +175,26 @@
 - If meme retrieval fails or returns no result, the bot MUST fall back to plain-text output.
 - If a meme image cannot be read, the bot MUST fall back to a plain-text explanation derived from the selected result.
 
+### REQ-MVP-011 Social Content Knowledge Base
+- The repository MUST include a social content knowledge base module (`social_kb`) that allows users to save, classify, and analyse content collected from social platforms (Facebook, Instagram, X/Twitter, YouTube, etc.).
+- The knowledge base MUST store content items in the same SQLite database used by the meme system, in a dedicated `social_content` table, without schema interference with existing meme tables.
+- Each content item MUST include: `item_id`, `url`, `title`, `raw_content`, `source_platform`, `created_at`, `updated_at`, and a nested `ContentAnalysis` record.
+- `ContentAnalysis` MUST include: `category` (one of 科技/AI, 商業/創業, 投資/理財, 健康/養生, 教育/學習, 行銷/自媒體, 娛樂/文化, 時事/社會, 其他), `tags`, `summary`, `key_points`, `trend_relevance`, and a `MonetizationScore`.
+- `MonetizationScore` MUST include four per-dimension scores (0–10): `social_score` (社群流量變現), `knowledge_score` (知識產品), `affiliate_score` (聯盟行銷), `consulting_score` (接案顧問), plus an `overall_score`, `channels` list, `content_angles` list, and `reasoning`.
+- The content extractor MUST fetch URLs asynchronously using an HTTP client, parse page title and body text using an HTML parser, cap extracted text at 8,000 characters, and automatically detect source platform from URL patterns.
+- The AI analyser MUST support all provider backends defined in REQ-MVP-008 (`openai`, `lmstudio`, `ollama`, `llama_cpp`, `gemini`, `claude`, `mock`, `local`). When `provider_backend` is `mock`, the analyser MUST return a stub analysis without making any external API call.
+- The knowledge base MUST support filtering by category, minimum overall_score, and keyword search across title, summary, and tags. Results MUST be sortable by `created_at` (newest first) or `overall_score` (highest first).
+- The Streamlit app MUST include a fourth page (`pages/4_📚_知識庫.py`) providing:
+  - **📚 知識庫 tab**: URL input to add new content (with async fetch + AI analysis), item cards with per-dimension score bars, checkbox-based multi-selection, and an article generation panel.
+  - **📊 賽道分析 tab**: batch aggregation over the knowledge base to identify topic tracks by high-score count, with readiness levels (📌 / 🌱 / 🌿 / 🌳) and optional AI deep-dive per track.
+- The article generator MUST accept 2 or more `ContentItem` records and a style selector (部落格/Medium, LinkedIn 長文, IG 懶人包, 新聞稿), synthesise them into a new original article with title, subtitle, intro, body sections, conclusion, hashtags, and format recommendations. The `mock` backend MUST return a deterministic stub article.
+- The track analyser MUST aggregate the knowledge base by category using a single SQL GROUP BY query, compute per-category counts and score averages, and optionally call the AI provider to produce common themes, market opportunity, recommended products, and a three-step action plan per track.
+- The Telegram bot MUST support three additional commands beyond REQ-MVP-010:
+  - `/save <url>`: fetch the URL, run AI analysis, save to the knowledge base, and reply with a formatted summary including per-dimension score bars and top monetisation channels.
+  - `/kb`: reply with total item count and category breakdown from the knowledge base.
+  - `/find <query>`: search the knowledge base by keyword and return the top 5 results sorted by overall_score.
+- All three Telegram knowledge base commands MUST be registered via a `register_kb_handlers()` function that initialises the repository and analyser and attaches them to the bot application's `bot_data`.
+
 ## Acceptance
-- The project MUST include automated tests covering schema validation, embedding text composition, provider registry, OCR success/empty/failure branching, template normalization, multi-route retrieval, rerank fallback, index schema/version isolation, evaluation reporting, indexing, image-query search, API response shape, and Telegram settings/runtime integration.
+- The project MUST include automated tests covering schema validation, embedding text composition, provider registry, OCR success/empty/failure branching, template normalization, multi-route retrieval, rerank fallback, index schema/version isolation, evaluation reporting, indexing, image-query search, API response shape, Telegram settings/runtime integration, and social knowledge base model/repository/extractor/analyser/generator/track-analyser behaviour with mock provider.
 - A minimal dataset of static images MUST be indexable and searchable end-to-end without changing code.

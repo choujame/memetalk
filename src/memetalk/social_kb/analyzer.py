@@ -49,6 +49,9 @@ class SocialContentAnalyzer:
         self.settings = settings
 
     async def analyze(self, url: str, title: str, content: str) -> ContentAnalysis:
+        if self.settings.provider_backend == "mock":
+            return self._stub(title)
+
         prompt = _PROMPT.format(
             url=url or "(未知)",
             title=title or "(無標題)",

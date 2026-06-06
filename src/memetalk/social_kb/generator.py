@@ -91,6 +91,17 @@ class ArticleGenerator:
         items: list[ContentItem],
         style: str = "部落格/Medium",
     ) -> GeneratedArticle:
+        if self.settings.provider_backend == "mock":
+            return GeneratedArticle(
+                title=f"【Mock】整合 {len(items)} 篇文章的測試文章",
+                subtitle="這是 mock provider 產生的測試文章",
+                intro="這是 mock provider 產生的引言段落，實際使用時請設定 AI Provider。",
+                sections=[{"heading": "主要內容", "content": "mock 內容段落。"}],
+                conclusion="mock 結語。",
+                hashtags=["#mock", "#測試"],
+                formats=["Mock 模式，不支援實際發布"],
+            )
+
         sources = self._format_sources(items)
         prompt = _PROMPT.format(
             count=len(items),
