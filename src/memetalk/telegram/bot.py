@@ -7,6 +7,7 @@ from typing import Any
 
 from memetalk.app.container import AppContainer, build_container
 from memetalk.config import AppSettings
+from memetalk.telegram.kb_handler import register_kb_handlers
 from memetalk.telegram.router import TelegramConversationMessage, TelegramDecision, build_telegram_router
 from memetalk.telegram.runtime import DirectTelegramSearchClient
 
@@ -71,9 +72,14 @@ def create_application(
         if update.message is None:
             return
         await update.message.reply_text(
-            "使用方式：直接傳送文字訊息。\n\n"
-            "我會用目前 MemeTalk 的 provider 與搜尋設定，決定要回文字、梗圖，或文字加梗圖。\n"
-            "如果想關閉 Telegram，回到 MemeTalk Settings 把 Telegram 開關關掉即可。"
+            "🤖 MemeTalk Bot 使用說明\n\n"
+            "【梗圖搜尋】\n"
+            "直接傳送文字，我會判斷要回文字、梗圖，或兩者。\n\n"
+            "【社群知識庫】\n"
+            "/save <url>　收藏連結並進行 AI 分析\n"
+            "/kb　　　　　查看知識庫統計\n"
+            "/find <詞>　搜尋知識庫內容\n\n"
+            "如要關閉 Bot，回 MemeTalk Settings 把 Telegram 開關關掉即可。"
         )
 
     async def handle_message(update, context) -> None:
@@ -118,6 +124,9 @@ def create_application(
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+    register_kb_handlers(application, active_settings)
+
     return application
 
 
